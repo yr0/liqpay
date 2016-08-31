@@ -1,4 +1,4 @@
-# LiqPAY
+# LiqPAY for version 3 Checkout API
 
 This Ruby gem implements the [LiqPAY](https://www.liqpay.com) billing system API, as described in [the LiqPAY documentation](https://www.liqpay.com/doc).
 

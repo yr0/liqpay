@@ -20,11 +20,12 @@ module Liqpay
     # OPTIONAL UI language - `ru` or `en`
     attr_accessor :language
     # OPTIONAL test mode (1 - ON)
-    attr_accessor :sandbox 
+    attr_accessor :sandbox
+    # action to perform on checkout - default 'pay'
+    attr_accessor :action
 
-    def initialize(options={})
+    def initialize(options = {})
       super(options)
-
       @amount = options[:amount]
       @currency = options[:currency]
       @description = options[:description]
@@ -33,8 +34,16 @@ module Liqpay
       @server_url = options[:server_url]
       @type = options[:type]
       @language = options[:language]
-      @sandbox = options[:sandbox]
       @kamikaze = options[:kamikaze]
+      @action = options[:action] || 'pay'
+      @sandbox = options[:sandbox] || 1
+    end
+
+    # creates url that can be used for user redirection and payment
+    def to_url
+      url = URI(Liqpay::CHECKOUT_ROUTE)
+      url.query = { data: as_liqpay_data, signature: signature }.to_query
+      url.to_s
     end
 
     def signature_fields
@@ -58,7 +67,27 @@ module Liqpay
       }.reject{|k,v| v.nil?}
     end
 
-  private
+    private
+
+    def as_liqpay_data
+      Base64.encode64(signature_hash_fields.to_json)
+    end
+
+    def signature_hash_fields
+      @hash_fields ||= signed_fields.map do |e|
+        value = send(e)
+        [e, value] if value
+      end.compact.to_h
+    end
+
+    def sign(_fields)
+      Base64.encode64(Digest::SHA1.digest(@private_key + as_liqpay_data + @private_key)).strip
+    end
+
+    def signed_fields
+      %i(amount sandbox currency public_key order_id action description result_url server_url)
+    end
+
     def validate!
       %w(public_key amount currency description).each do |required_field|
         raise Liqpay::Exception.new(required_field + ' is a required field') unless self.send(required_field).to_s != ''

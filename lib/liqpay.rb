@@ -7,6 +7,7 @@ require 'liqpay/railtie' if defined?(Rails)
 module Liqpay
   LIQPAY_ENDPOINT_URL = 'https://www.liqpay.com/api/pay'
   SUPPORTED_CURRENCIES = %w(UAH USD EUR RUB)
+  CHECKOUT_ROUTE = 'https://www.liqpay.com/api/3/checkout'
 
   @default_options = {}
   class << self; attr_accessor :default_options; end
